@@ -40,32 +40,32 @@ def train(nerf_model, optimizer, scheduler, data_loader, device, hn=0, hf=1, nb_
     training_loss = []
     for epoch in tqdm(range(nb_epochs)):
         epoch_loss = 0
-        
+
         # check if the model for the current epoch exists
-        if os.path.exists(f'nerf_model_epoch_{epoch + 1}.pth'):
+        if not os.path.exists(f'nerf_model_epoch_{epoch + 1}.pth'):
+            for batch in data_loader:
+                ray_origins = batch[:, :3].to(device)
+                ray_directions = batch[:, 3:6].to(device)
+                ground_truth_px_values = batch[:, 6:].to(device)
+                
+                regenerated_px_values = render_rays(nerf_model, ray_origins, ray_directions, hn=hn, hf=hf, nb_bins=nb_bins) 
+                loss = ((ground_truth_px_values - regenerated_px_values) ** 2).sum()
+
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+                epoch_loss += loss.item()
+                training_loss.append(loss.item())
+
+            print(f'Loss for {epoch}: {epoch_loss}')
+            scheduler.step()
+
+            if (epoch + 1) % save_every == 0:
+                torch.save(nerf_model.state_dict(), f'nerf_model_epoch_{epoch + 1}.pth')
+        else:
+            print(f'Loading model for epoch {epoch + 1}...')
             nerf_model.load_state_dict(torch.load(f'nerf_model_epoch_{epoch + 1}.pth'))
-            continue
 
-        for batch in data_loader:
-            ray_origins = batch[:, :3].to(device)
-            ray_directions = batch[:, 3:6].to(device)
-            ground_truth_px_values = batch[:, 6:].to(device)
-            
-            regenerated_px_values = render_rays(nerf_model, ray_origins, ray_directions, hn=hn, hf=hf, nb_bins=nb_bins) 
-            loss = ((ground_truth_px_values - regenerated_px_values) ** 2).sum()
-
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-            epoch_loss += loss.item()
-            training_loss.append(loss.item())
-
-        print(f'Loss for {epoch}: {epoch_loss}')
-        scheduler.step()
-
-        if (epoch + 1) % save_every == 0:
-            torch.save(nerf_model.state_dict(), f'nerf_model_epoch_{epoch + 1}.pth')
-            
         # vizualize 200//epochs images for every epoch; 
         n_images = len(testing_dataset)//H//W
         images_to_viz = n_images // nb_epochs
