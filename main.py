@@ -1,3 +1,4 @@
+import os
 import torch
 from tqdm import tqdm
 import numpy as np
@@ -38,9 +39,13 @@ def train(nerf_model, optimizer, scheduler, data_loader, device, hn=0, hf=1, nb_
 
     training_loss = []
     for epoch in tqdm(range(nb_epochs)):
-        print(f'Epoch {epoch + 1}/{nb_epochs}')
         epoch_loss = 0
-        print(f'Iterating over {len(data_loader)} samples...')
+        
+        # check if the model for the current epoch exists
+        if os.path.exists(f'nerf_model_epoch_{epoch + 1}.pth'):
+            nerf_model.load_state_dict(torch.load(f'nerf_model_epoch_{epoch + 1}.pth'))
+            continue
+
         for batch in data_loader:
             ray_origins = batch[:, :3].to(device)
             ray_directions = batch[:, 3:6].to(device)
@@ -63,7 +68,6 @@ def train(nerf_model, optimizer, scheduler, data_loader, device, hn=0, hf=1, nb_
             
         # vizualize 200//epochs images for every epoch; 
         n_images = len(testing_dataset)//H//W
-        print(f'Visualizing {n_images} images...')
         images_to_viz = n_images // nb_epochs
         start_index = epoch * images_to_viz
         end_index = (epoch + 1) * images_to_viz
