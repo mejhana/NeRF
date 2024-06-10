@@ -1,5 +1,11 @@
 import torch
 
+def normalize(arr):
+    min_val = arr.min()
+    max_val = arr.max()
+    normalized_arr = (arr - min_val) / (max_val - min_val)
+    return normalized_arr
+
 def accumulated_transmittance(sigma, delta):
     """
     Compute the accumulated transmittance along each ray.
@@ -61,4 +67,6 @@ def render_rays(nerf_model, ray_origins, ray_directions, hn=0, hf=0.5, nb_bins=1
     # Compute the pixel values as a weighted sum of colors along each ray
     col = (weights * colors).sum(dim=1)
     weight_sum = weights.sum(-1).sum(-1)  # Regularisation for white background 
-    return col + 1 - weight_sum.unsqueeze(-1)
+    # TODO: normalize the pixel values to [0, 1]
+    col = col + 1- weight_sum.unsqueeze(-1)
+    return normalize(col)
