@@ -58,6 +58,9 @@ def train(nerf_model, optimizer, scheduler, data_loader, device, hn=0, hf=1, nb_
         print(f'Loss for {epoch}: {epoch_loss}')
         scheduler.step()
 
+        if (epoch + 1) % save_every == 0:
+            torch.save(nerf_model.state_dict(), f'nerf_model_epoch_{epoch + 1}.pth')
+            
         # vizualize 200//epochs images for every epoch; 
         n_images = len(testing_dataset)//H//W
         print(f'Visualizing {n_images} images...')
@@ -66,9 +69,6 @@ def train(nerf_model, optimizer, scheduler, data_loader, device, hn=0, hf=1, nb_
         end_index = (epoch + 1) * images_to_viz
         for img_index in range(start_index, end_index):  # Visualize a few images
             test(nerf_model, device, hn, hf, testing_dataset, img_index=img_index, nb_bins=nb_bins, H=H, W=W)
-
-        if (epoch + 1) % save_every == 0:
-            torch.save(nerf_model.state_dict(), f'nerf_model_epoch_{epoch + 1}.pth')
 
     return training_loss
 
@@ -95,5 +95,5 @@ if __name__ == '__main__':
     
     # training
     print(f'Training model on {device}...')
-    train(model, optimizer, scheduler, data_loader, device, hn=2, hf=6, nb_epochs=2, nb_bins=192, H=400,
+    train(model, optimizer, scheduler, data_loader, device, hn=2, hf=6, nb_epochs=16, nb_bins=192, H=400,
           W=400)
