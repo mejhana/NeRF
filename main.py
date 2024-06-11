@@ -99,5 +99,5 @@ if __name__ == '__main__':
     
     # training
     print(f'Training model on {device}...')
-    train(model, optimizer, scheduler, data_loader, device, hn=2, hf=6, nb_epochs=16, nb_bins=192, H=400,
+    train(model, optimizer, scheduler, data_loader, device, hn=2, hf=6, nb_epochs=50, nb_bins=192, H=400,
           W=400)
