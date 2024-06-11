@@ -1,6 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+from .render import render_rays
+from .nerf import NeRF
+
 # Normalize function
 def normalize(arr):
     min_val = arr.min()
@@ -10,6 +13,20 @@ def normalize(arr):
 
 def viz_dataset(training_dataset):
     # Split the dataset into three sets of images; visualize the first 3 images
+
+    # print the max and min of the training set 
+    ray_origins = training_dataset[:, :3]
+    ray_directions = training_dataset[:, 3:6]
+    ground_truth_px_values = training_dataset[:, 6:]
+
+    nerf_model = NeRF()
+    regenerated_px_values = render_rays(nerf_model, ray_origins[:5, :], ray_directions[:5, :])
+    print(regenerated_px_values)
+    print(f'Min and Max of Ray Origins: {ray_origins.min()}, {ray_origins.max()}')
+    print(f'Min and Max of Ray Directions: {ray_directions.min()}, {ray_directions.max()}')
+    print(f'Min and Max of Ground Truth PX Values: {ground_truth_px_values.min()}, {ground_truth_px_values.max()}')
+    print(f'Min and Max of Regenerated PX Values: {regenerated_px_values.min()}, {regenerated_px_values.max()}')
+
     images_per_set = 4
     H, W = 400, 400
 
