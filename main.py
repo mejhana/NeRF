@@ -24,7 +24,7 @@ def test(model, device, hn, hf, dataset, chunk_size=10, img_index=0, nb_bins=192
         regenerated_px_values = render_rays(model, ray_origins_, ray_directions_, hn=hn, hf=hf, nb_bins=nb_bins)
         data.append(regenerated_px_values)
     img = torch.cat(data).data.cpu().numpy().reshape(H, W, 3)
-
+    img = np.clip(img, 0, 1)
     plt.figure()
     plt.axis('off')
     plt.gca().set_facecolor('black')
@@ -89,6 +89,11 @@ if __name__ == '__main__':
     # viz_dataset(training_dataset)
     # viz_synth()
 
+    newpath = 'novel_views' 
+    if not os.path.exists(newpath):
+        print('creating the novel views path')
+        os.makedirs(newpath)
+        
     # model
     emb_dim_pos = 10
     emb_dim_dir = 4
